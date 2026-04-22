@@ -1,0 +1,42 @@
+# ============================================================
+# requirements.txt — Exchange Rate Alert System
+# Python 3.10+
+# ============================================================
+
+# ── Django & Web ───────────────────────────────────────────
+Django==4.2.11
+djangorestframework==3.15.1
+django-cors-headers==4.3.1
+mysqlclient==2.2.4
+python-dotenv==1.0.1
+Pillow==10.3.0                 # Required by Django for ImageField
+
+# ── Scheduling ─────────────────────────────────────────────
+APScheduler==3.10.4
+django-apscheduler==0.6.2
+
+# ── Data Science & Time Series ─────────────────────────────
+numpy==1.26.4
+pandas==2.2.2
+statsmodels==0.14.2
+scipy==1.13.0
+
+# ── Visualisation ──────────────────────────────────────────
+plotly==5.22.0
+matplotlib==3.8.4
+
+# ── Notifications ──────────────────────────────────────────
+twilio==9.0.5                  # Optional — WhatsApp alerts
+
+# ── Utilities ──────────────────────────────────────────────
+requests==2.32.2
+python-dateutil==2.9.0
+
+# ── Development & Testing ──────────────────────────────────
+pytest==8.2.0
+pytest-django==4.8.0
+factory-boy==3.3.0
+coverage==7.5.1
+black==24.4.2
+flake8==7.0.0
+isort==5.13.2

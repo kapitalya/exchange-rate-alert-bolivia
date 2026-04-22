@@ -1,0 +1,224 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Dashboard — Tipo de Cambio Paralelo{% endblock %}
+
+{% block content %}
+
+<!-- ── KPI Row ──────────────────────────────────────────────── -->
+<div class="row g-3 mb-4">
+
+  <div class="col-sm-6 col-xl-3">
+    <div class="kpi-card">
+      <div class="kpi-label"><i class="bi bi-currency-dollar"></i> Tipo Paralelo Actual</div>
+      <div class="kpi-value">
+        {% if latest %}BOB {{ latest.rate_parallel }}{% else %}—{% endif %}
+      </div>
+      <div class="kpi-sub">
+        {% if latest %}{{ latest.date|date:"d/m/Y" }}{% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-sm-6 col-xl-3">
+    <div class="kpi-card">
+      <div class="kpi-label"><i class="bi bi-arrow-left-right"></i> Spread Oficial</div>
+      <div class="kpi-value">
+        {% if latest and latest.spread %}BOB {{ latest.spread }}{% else %}—{% endif %}
+      </div>
+      <div class="kpi-sub">Paralelo − Oficial (BOB 6.96)</div>
+    </div>
+  </div>
+
+  <div class="col-sm-6 col-xl-3">
+    <div class="kpi-card">
+      <div class="kpi-label"><i class="bi bi-graph-up-arrow"></i> Variación Semanal</div>
+      <div class="kpi-value {% if weekly_change > 0 %}kpi-change-up{% elif weekly_change < 0 %}kpi-change-down{% endif %}">
+        {% if weekly_change %}
+          {% if weekly_change > 0 %}+{% endif %}{{ weekly_change }}
+        {% else %}—{% endif %}
+      </div>
+      <div class="kpi-sub">
+        {% if weekly_change_pct %}
+          {% if weekly_change_pct > 0 %}▲{% else %}▼{% endif %}
+          {{ weekly_change_pct }}% vs 7 días atrás
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-sm-6 col-xl-3">
+    <div class="kpi-card">
+      <div class="kpi-label"><i class="bi bi-bell"></i> Alertas Activas</div>
+      <div class="kpi-value">{{ active_alerts_count }}</div>
+      <div class="kpi-sub">
+        <a href="{% url 'alert-settings' %}" style="font-size:.8rem;">Gestionar →</a>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /KPI Row -->
+
+<!-- ── Charts Row ───────────────────────────────────────────── -->
+<div class="row g-3 mb-4">
+
+  <!-- Mini chart -->
+  <div class="col-lg-8">
+    <div class="card h-100">
+      <div class="card-header-custom d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-graph-up text-primary"></i> Últimos 30 días</span>
+        <a href="{% url 'historical' %}" class="btn btn-sm btn-outline-secondary" style="font-size:.75rem;">
+          Ver completo
+        </a>
+      </div>
+      <div class="card-body p-3">
+        {% if mini_chart %}
+        <div id="mini-chart" style="height:240px;"></div>
+        {% else %}
+        <div class="text-center text-muted py-5">Sin datos disponibles</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Forecast summary -->
+  <div class="col-lg-4">
+    <div class="card h-100">
+      <div class="card-header-custom d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-graph-up text-danger"></i> Pronóstico 14d</span>
+        <a href="{% url 'forecast' %}" class="btn btn-sm btn-outline-secondary" style="font-size:.75rem;">
+          Ver detalle
+        </a>
+      </div>
+      <div class="card-body p-3">
+        {% if active_forecast and forecast_points %}
+          <div class="mb-2" style="font-size:.8rem; color:#6b7280;">
+            ARIMA{{ active_forecast.model_order }} •
+            {{ active_forecast.forecast_from|date:"d/m" }} →
+            {{ active_forecast.forecast_to|date:"d/m/Y" }}
+          </div>
+          <table class="table table-sm mb-0" style="font-size:.8rem;">
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Pronóst.</th>
+                <th>IC 95%</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for pt in forecast_points|slice:":7" %}
+              <tr>
+                <td>{{ pt.date|date:"d/m" }}</td>
+                <td><strong>{{ pt.predicted_value }}</strong></td>
+                <td style="color:#6b7280; font-size:.75rem;">
+                  [{{ pt.ci_lower_95 }}–{{ pt.ci_upper_95 }}]
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% else %}
+          <div class="text-center text-muted py-4">
+            <i class="bi bi-hourglass" style="font-size:1.5rem;"></i>
+            <p class="mt-2 mb-0" style="font-size:.85rem;">Sin pronóstico activo</p>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+</div><!-- /Charts Row -->
+
+<!-- ── Recent Triggered Alerts ──────────────────────────────── -->
+<div class="row g-3">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header-custom d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-exclamation-triangle text-warning"></i> Alertas Disparadas Recientes</span>
+        <a href="{% url 'alerts' %}" class="btn btn-sm btn-outline-secondary" style="font-size:.75rem;">
+          Ver todas
+        </a>
+      </div>
+      <div class="card-body p-0">
+        {% if recent_triggered %}
+        <table class="table table-clean mb-0">
+          <thead>
+            <tr>
+              <th>Fecha/Hora</th>
+              <th>Tipo</th>
+              <th>Mensaje</th>
+              <th>Severidad</th>
+              <th>Notif.</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for alert in recent_triggered %}
+            <tr>
+              <td>{{ alert.triggered_at|date:"d/m/Y H:i" }}</td>
+              <td>
+                <span class="badge bg-light text-dark" style="font-size:.72rem;">
+                  {{ alert.configuration.get_alert_type_display }}
+                </span>
+              </td>
+              <td style="max-width:350px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                {{ alert.message_es|truncatechars:80 }}
+              </td>
+              <td>
+                <span class="badge badge-severity-{{ alert.severity }} rounded-pill">
+                  {% if alert.severity == 'red' %}🔴{% elif alert.severity == 'yellow' %}🟡{% else %}🟢{% endif %}
+                  {{ alert.get_severity_display }}
+                </span>
+              </td>
+              <td>
+                {% if alert.notification_sent %}
+                  <i class="bi bi-check-circle-fill text-success"></i>
+                {% else %}
+                  <i class="bi bi-clock text-warning"></i>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <div class="text-center text-muted py-4">
+          <i class="bi bi-check-circle" style="font-size:1.5rem; color:#0ea472;"></i>
+          <p class="mt-2 mb-0">Sin alertas disparadas recientemente.</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── ARIMA Model Status ──────────────────────────────────── -->
+{% if arima_config %}
+<div class="row g-3 mt-1">
+  <div class="col-12">
+    <div class="alert alert-light border d-flex align-items-center gap-3" style="font-size:.85rem;">
+      <i class="bi bi-cpu" style="font-size:1.2rem; color:#1a56db;"></i>
+      <span>
+        <strong>Modelo activo:</strong> ARIMA({{ arima_config.p }},{{ arima_config.d }},{{ arima_config.q }})
+        &nbsp;·&nbsp; AIC={{ arima_config.aic|floatformat:2 }}
+        &nbsp;·&nbsp; Entrenado con {{ arima_config.trained_on_observations }} obs.
+        &nbsp;·&nbsp; Actualizado: {{ arima_config.selected_at|date:"d/m/Y" }}
+      </span>
+      <a href="{% url 'model-metrics' %}" class="ms-auto btn btn-sm btn-outline-primary" style="font-size:.75rem; white-space:nowrap;">
+        Ver métricas
+      </a>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_scripts %}
+{% if mini_chart %}
+<script>
+  const chartData = {{ mini_chart|safe }};
+  Plotly.newPlot("mini-chart", chartData.data, chartData.layout, {
+    displayModeBar: false, responsive: true
+  });
+</script>
+{% endif %}
+{% endblock %}

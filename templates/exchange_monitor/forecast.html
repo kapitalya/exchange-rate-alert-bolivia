@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% block title %}Pronóstico ARIMA{% endblock %}
+{% block page_title %}Pronóstico 14 Días — ARIMA{% endblock %}
+
+{% block content %}
+
+{% if not forecast %}
+<div class="alert alert-warning">
+  <i class="bi bi-exclamation-triangle"></i>
+  No hay pronóstico activo. Ejecute el modelo desde la consola de management.
+</div>
+{% else %}
+
+<!-- ── Forecast Meta Cards ──────────────────────────────────── -->
+<div class="row g-3 mb-4">
+  <div class="col-sm-6 col-xl-3">
+    <div class="kpi-card">
+      <div class="kpi-label">Modelo</div>
+      <div class="kpi-value" style="font-size:1.4rem;">ARIMA{{ forecast.model_order }}</div>
+      <div class="kpi-sub">AIC = {{ forecast.aic_score|floatformat:2 }}</div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <div class="kpi-card">
+      <div class="kpi-label">Período Pronosticado</div>
+      <div class="kpi-value" style="font-size:1.1rem;">
+        {{ forecast.forecast_from|date:"d/m" }} → {{ forecast.forecast_to|date:"d/m/Y" }}
+      </div>
+      <div class="kpi-sub">14 días hábiles</div>
+    </div>
+  </div>
+  {% if forecast.mae %}
+  <div class="col-sm-6 col-xl-3">
+    <div class="kpi-card">
+      <div class="kpi-label">MAE (Validación)</div>
+      <div class="kpi-value" style="font-size:1.4rem;">{{ forecast.mae|floatformat:4 }}</div>
+      <div class="kpi-sub">RMSE: {{ forecast.rmse|floatformat:4 }}</div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <div class="kpi-card">
+      <div class="kpi-label">MAPE</div>
+      <div class="kpi-value" style="font-size:1.4rem;">{{ forecast.mape|floatformat:2 }}%</div>
+      <div class="kpi-sub">Cobertura IC95: {{ forecast.coverage_95|floatformat:1 }}%</div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<!-- ── Forecast Chart ───────────────────────────────────────── -->
+<div class="card mb-4">
+  <div class="card-header-custom">
+    <i class="bi bi-graph-up text-danger"></i>
+    Pronóstico con Intervalos de Confianza 80% y 95%
+  </div>
+  <div class="card-body p-3">
+    <div id="forecast-chart" style="height:420px;"></div>
+  </div>
+</div>
+
+<!-- ── Forecast Table ───────────────────────────────────────── -->
+<div class="card">
+  <div class="card-header-custom">
+    <i class="bi bi-table"></i> Tabla de Pronósticos Detallada
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-clean mb-0">
+        <thead>
+          <tr>
+            <th>Día</th>
+            <th>Fecha</th>
+            <th>Pronóstico</th>
+            <th>IC 80% Inferior</th>
+            <th>IC 80% Superior</th>
+            <th>IC 95% Inferior</th>
+            <th>IC 95% Superior</th>
+            {% if forecast_points.0.actual_value is not None %}
+            <th>Real</th>
+            {% endif %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for pt in forecast_points %}
+          <tr>
+            <td><span class="badge bg-secondary rounded-pill">D+{{ pt.step_ahead }}</span></td>
+            <td>{{ pt.date|date:"d/m/Y (D)" }}</td>
+            <td><strong>BOB {{ pt.predicted_value }}</strong></td>
+            <td style="color:#6b7280;">{{ pt.ci_lower_80 }}</td>
+            <td style="color:#6b7280;">{{ pt.ci_upper_80 }}</td>
+            <td style="color:#9ca3af;">{{ pt.ci_lower_95 }}</td>
+            <td style="color:#9ca3af;">{{ pt.ci_upper_95 }}</td>
+            {% if pt.actual_value %}
+            <td>
+              <strong>{{ pt.actual_value }}</strong>
+              <span style="font-size:.75rem; color:
+                {% with diff=pt.actual_value|add:0 pred=pt.predicted_value|add:0 %}
+                {% if diff > pred %}#dc2626{% else %}#0ea472{% endif %}
+                {% endwith %}">
+                ↕
+              </span>
+            </td>
+            {% endif %}
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% endif %}
+
+{% endblock %}
+
+{% block extra_scripts %}
+{% if forecast and chart_json %}
+<script>
+  const chartData = {{ chart_json|safe }};
+  Plotly.newPlot("forecast-chart", chartData.data, chartData.layout, {
+    displayModeBar: true,
+    responsive: true,
+    modeBarButtonsToRemove: ["lasso2d", "select2d"],
+    toImageButtonOptions: {
+      format: "png", filename: "forecast_kapitalya",
+      height: 600, width: 1200, scale: 2
+    }
+  });
+</script>
+{% endif %}
+{% endblock %}
