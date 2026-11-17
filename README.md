@@ -11,8 +11,8 @@
 > Automated monitoring, forecasting, and alerting system for the Bolivian parallel USD/BOB exchange rate.  
 > Built for **Kapitalya**. Un README anterior declaraba "Production" y "uso diario desde 2023"; el repo no lo respalda (ver Estado).
 
-**Estado (2026-11-17):** PARCIAL — faltan `exchange_monitor/views.py` (que `exchange_monitor/urls.py` importa), migraciones (solo `__init__.py`), templates `historical.html`, `alerts.html` y `settings.html`, tests (solo `__init__.py` vacíos), `.env.example` y CI. Los datos de ejemplo son sintéticos. Estado de producción: sin verificar en este corte.
-**Repo:** kapitalya/exchange-rate-alert-bolivia · **Rama por defecto:** main · **Alias/nombres anteriores:** "Exchange Rate Alert System" (README previo), "Alerta de Tasas" / "exchange-alert" (tromay), `alertas.kapitalya.com.bo` (dominio citado por tromay)
+**Estado (2026-11-17):** PARCIAL — faltan `exchange_monitor/views.py` (que `exchange_monitor/urls.py` importa), migraciones (solo `__init__.py`), templates `historical.html`, `alerts.html` y `settings.html`, tests (solo `__init__.py` vacíos), `.env.example` y CI. Los datos de ejemplo son sintéticos. Sin verificar (requiere observación de producción): si corre en algún host.
+**Repo:** kapitalya/exchange-rate-alert-bolivia · **Rama por defecto:** main · **Alias/nombres anteriores:** "Exchange Rate Alert System" (README previo), "Alerta de Tasas" / "exchange-alert" (tromay), `alertas.kapitalya.com.bo` (dominio citado antes por tromay; según el comentario de `LeadController` en tromay está dado de baja y hoy redirige a Paralelo)
 
 ---
 
@@ -315,7 +315,7 @@ This makes the problem technically interesting: a relatively short, non-seasonal
 
 The historical exchange rate data in this repository is **synthetically generated** to preserve the confidentiality of Kapitalya's proprietary market data. The synthetic series was calibrated to match the real statistical properties (volatility regimes, trend structure, spread behaviour) observed in production.
 
-La afirmación previa de que la implementación es idéntica al sistema de producción no se puede verificar desde este repo (sin verificar).
+La afirmación previa de que la implementación es idéntica al sistema de producción no se puede comprobar desde este repo: no contiene configuración ni despliegue de producción (sin verificar, requiere observación de producción).
 
 ---
 
@@ -349,17 +349,19 @@ El README anterior declaraba licencia MIT, pero el repo no contiene archivo LICE
 App Django (MySQL) para monitorear el USD paralelo/BOB: modelos de tasas, pronósticos y alertas; pronóstico ARIMA con grid search (statsmodels); motor de 4 tipos de alerta; notificaciones por email y WhatsApp (Twilio); scheduler APScheduler; API REST (DRF) y dashboard Plotly. Lo anterior describe el código existente; la capa de vistas web está incompleta (ver Estado).
 
 ## Variables de entorno (solo nombres)
-Sin verificar: no hay `.env.example`; los nombres deben leerse de `config/settings.py`. Por el stack se esperan credenciales de MySQL, SMTP (puerto 587) y Twilio.
+No hay `.env.example`; los nombres salen de `config/settings.py`: `DJANGO_SECRET_KEY`, `DJANGO_DEBUG`, `DJANGO_ALLOWED_HOSTS`, `CORS_ALLOWED_ORIGINS`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT`, `EMAIL_BACKEND`, `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_USE_TLS`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`, `DEFAULT_FROM_EMAIL`, `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_WHATSAPP_FROM`, `ARIMA_FORECAST_DAYS`, `ARIMA_MAX_P`, `ARIMA_MAX_D`, `ARIMA_MAX_Q`, `ARIMA_MIN_OBS`, `ARIMA_TRAIN_RATIO`.
 
 ## Pruebas y CI
-`pytest` figura en `requirements.txt`, pero `tests/unit` y `tests/integration` solo contienen `__init__.py`: 0 tests. No hay workflows de CI.
+`requirements.txt` fija `pytest` 8.2.0 y `pytest-django` 4.8.0, pero `tests/unit` y `tests/integration` solo contienen `__init__.py`: 0 tests. No hay workflows de CI.
 
 ## Despliegue
-No hay Dockerfile ni workflow de deploy en el repo. Estado de producción: sin verificar en este corte. Dev: `python manage.py runserver` en `http://localhost:8000`, MySQL 3306.
+No hay Dockerfile ni workflow de deploy en el repo (árbol). Sin verificar (requiere observación de producción): si hay una instancia desplegada. Dev: `python manage.py runserver` en `http://localhost:8000`, MySQL 3306.
 
 ## Estado y relaciones
-- **tromay:** `tromay/README.md` afirma que este repo consume su `/api/rates` y lo presenta como "Alerta de Tasas" (`alertas.kapitalya.com.bo`). Sin verificar en el código: ningún archivo revisado (`config/settings.py`, `alerts/engine.py`) referencia tromay ni forex-erp.
+- **tromay:** `tromay/README.md` afirma que este repo consume su `/api/rates` y lo presenta como "Alerta de Tasas" (`alertas.kapitalya.com.bo`). Verificado en el código: ningún archivo de texto del repo (`.py`, `.html`, `.sql`, `.md`, `requirements.txt`) referencia tromay ni forex-erp; solo sirve su propio `/api/rates/`. El consumo declarado por tromay no existe en este repo.
 - **forex-erp (KapiFX):** sin dependencia de código. KapiFX tiene sus propios módulos `alerts`, `predictions` y `macro`: solape funcional con el ARIMA y las alertas de este repo.
+- `exchange_monitor/urls.py` importa `views.DashboardView`, `HistoricalView`, `ForecastView`, `AlertsView`, `AlertSettingsView` y `ModelMetricsView`; ninguna existe porque falta `exchange_monitor/views.py`.
+- `exchange_monitor/urls.py` importa `views.DashboardView`, `HistoricalView`, `ForecastView`, `AlertsView`, `AlertSettingsView` y `ModelMetricsView`; ninguna existe porque falta `exchange_monitor/views.py`.
 - Plan de construcción de referencia: `docs/BUILD_PLAN.md`.
 
 ## Precios y planes
