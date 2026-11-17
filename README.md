@@ -359,7 +359,7 @@ No hay Dockerfile ni workflow de deploy en el repo. Estado de producción: sin v
 
 ## Estado y relaciones
 - **tromay:** `tromay/README.md` afirma que este repo consume su `/api/rates` y lo presenta como "Alerta de Tasas" (`alertas.kapitalya.com.bo`). Sin verificar en el código: ningún archivo revisado (`config/settings.py`, `alerts/engine.py`) referencia tromay ni forex-erp.
-- **forex-erp (KapiFx):** sin dependencia de código. KapiFx tiene sus propios módulos `alerts`, `predictions` y `macro`: solape funcional con el ARIMA y las alertas de este repo.
+- **forex-erp (KapiFX):** sin dependencia de código. KapiFX tiene sus propios módulos `alerts`, `predictions` y `macro`: solape funcional con el ARIMA y las alertas de este repo.
 - Plan de construcción de referencia: `docs/BUILD_PLAN.md`.
 
 ## Precios y planes
