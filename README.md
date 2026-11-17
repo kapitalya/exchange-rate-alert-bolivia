@@ -1,15 +1,18 @@
-# Exchange Rate Alert System — Bolivian Parallel USD Market
+# Alerta de Tasas — Exchange Rate Alert System (USD paralelo Bolivia)
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)
 ![Django](https://img.shields.io/badge/Django-4.2-092E20?logo=django&logoColor=white)
 ![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?logo=mysql&logoColor=white)
 ![statsmodels](https://img.shields.io/badge/statsmodels-0.14-FF6F00)
 ![Plotly](https://img.shields.io/badge/Plotly-5.22-3F4F75?logo=plotly&logoColor=white)
-![License](https://img.shields.io/badge/License-MIT-green)
-![Status](https://img.shields.io/badge/Status-Production-brightgreen)
+![License](https://img.shields.io/badge/License-sin%20LICENSE-lightgrey)
+![Status](https://img.shields.io/badge/Status-PARCIAL-orange)
 
 > Automated monitoring, forecasting, and alerting system for the Bolivian parallel USD/BOB exchange rate.  
-> Built for **Kapitalya** — actively used in daily financial operations since 2023.
+> Built for **Kapitalya**. Un README anterior declaraba "Production" y "uso diario desde 2023"; el repo no lo respalda (ver Estado).
+
+**Estado (2026-11-17):** PARCIAL — faltan `exchange_monitor/views.py` (que `exchange_monitor/urls.py` importa), migraciones (solo `__init__.py`), templates `historical.html`, `alerts.html` y `settings.html`, tests (solo `__init__.py` vacíos), `.env.example` y CI. Los datos de ejemplo son sintéticos. Sin verificar (requiere observación de producción): si corre en algún host.
+**Repo:** kapitalya/exchange-rate-alert-bolivia · **Rama por defecto:** main · **Alias/nombres anteriores:** "Exchange Rate Alert System" (README previo), "Alerta de Tasas" / "exchange-alert" (tromay), `alertas.kapitalya.com.bo` (dominio citado antes por tromay; según el comentario de `LeadController` en tromay está dado de baja y hoy redirige a Paralelo)
 
 ---
 
@@ -66,6 +69,10 @@ For businesses like Kapitalya that operate in both markets, **a 0.50 BOB move in
 
 ---
 
+Nota: en el diagrama, "API Scraper" figura como fuente pero no hay scraper en el código; hoy los datos entran por carga manual o por `scripts/generate_synthetic_data.py`.
+
+---
+
 ## ARIMA Methodology
 
 ### Why ARIMA?
@@ -117,6 +124,8 @@ Integration order d: Determined by Augmented Dickey-Fuller test
 
 ## Model Performance (Synthetic Data Baseline)
 
+Estas métricas se midieron sobre datos sintéticos, no sobre datos de producción.
+
 Validated using **walk-forward cross-validation** on 80/20 train/test split:
 
 | Metric | Value | Interpretation |
@@ -141,9 +150,9 @@ exchange-rate-alert-bolivia/
 │
 ├── exchange_monitor/          # Core Django app
 │   ├── models.py              # 7 database models
-│   ├── views.py               # Dashboard, historical, forecast, alerts
+│   ├── views.py               # NO EXISTE en el repo (urls.py hace `from exchange_monitor import views`)
 │   ├── urls.py
-│   └── migrations/
+│   └── migrations/            # solo __init__.py (sin migraciones)
 │
 ├── arima/                     # Time-series analysis module
 │   ├── analysis.py            # EDA: ADF test, ACF/PACF, stationarity
@@ -161,22 +170,20 @@ exchange-rate-alert-bolivia/
 │
 ├── templates/                 # Bootstrap 5 templates
 │   ├── base.html              # Sidebar layout
+│   ├── registration/login.html
 │   └── exchange_monitor/
 │       ├── dashboard.html
-│       ├── historical.html
-│       ├── forecast.html
-│       ├── alerts.html
-│       └── settings.html
+│       └── forecast.html      # (historical.html, alerts.html y settings.html NO existen)
 │
 ├── scripts/
 │   ├── create_schema.sql      # MySQL DDL
 │   └── generate_synthetic_data.py  # Realistic test data generator
 │
 ├── tests/
-│   ├── unit/
-│   └── integration/
+│   ├── unit/                  # solo __init__.py (0 tests)
+│   └── integration/           # solo __init__.py (0 tests)
 │
-├── .env.example               # Environment variables template
+├── docs/BUILD_PLAN.md         # plan de construcción de 8 días
 ├── requirements.txt           # Pinned dependencies
 └── README.md
 ```
@@ -194,7 +201,7 @@ exchange-rate-alert-bolivia/
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/yourusername/exchange-rate-alert-bolivia.git
+git clone https://github.com/kapitalya/exchange-rate-alert-bolivia.git
 cd exchange-rate-alert-bolivia
 
 # 2. Create virtual environment
@@ -206,13 +213,13 @@ venv\Scripts\activate          # Windows
 pip install -r requirements.txt
 
 # 4. Configure environment
-copy .env.example .env
-# Edit .env with your MySQL credentials and settings
+# No existe .env.example en el repo: crea .env con las variables listadas en "Variables de entorno (solo nombres)"
 
 # 5. Create MySQL database
 mysql -u root -p < scripts/create_schema.sql
 
-# 6. Apply Django migrations
+# 6. Migraciones: el repo no trae migraciones (solo __init__.py); generar con makemigrations antes de migrate
+python manage.py makemigrations exchange_monitor
 python manage.py migrate
 
 # 7. Create superuser
@@ -269,7 +276,7 @@ curl -X POST http://localhost:8000/api/alerts/ \
     "threshold_value": "12.0000",
     "severity": "red",
     "notify_email": true,
-    "email_recipients": "analista@kapitalya.com"
+    "email_recipients": "analista@example.com"
   }'
 ```
 
@@ -308,7 +315,7 @@ This makes the problem technically interesting: a relatively short, non-seasonal
 
 The historical exchange rate data in this repository is **synthetically generated** to preserve the confidentiality of Kapitalya's proprietary market data. The synthetic series was calibrated to match the real statistical properties (volatility regimes, trend structure, spread behaviour) observed in production.
 
-The system architecture, ARIMA methodology, alert logic, and Django implementation are identical to the production system.
+La afirmación previa de que la implementación es idéntica al sistema de producción no se puede comprobar desde este repo: no contiene configuración ni despliegue de producción (sin verificar, requiere observación de producción).
 
 ---
 
@@ -330,8 +337,40 @@ The system architecture, ARIMA methodology, alert logic, and Django implementati
 
 ## License
 
-MIT License — see [LICENSE](LICENSE) for details.
+El README anterior declaraba licencia MIT, pero el repo no contiene archivo LICENSE. Hasta que el dueño defina la licencia, el código es de uso interno de Kapitalya, sin licencia de reutilización para terceros.
 
 ---
 
-*Built with ♥ by [Your Name] for Kapitalya — La Paz, Bolivia*
+*Kapitalya — La Paz, Bolivia*
+
+---
+
+## Qué hace
+App Django (MySQL) para monitorear el USD paralelo/BOB: modelos de tasas, pronósticos y alertas; pronóstico ARIMA con grid search (statsmodels); motor de 4 tipos de alerta; notificaciones por email y WhatsApp (Twilio); scheduler APScheduler; API REST (DRF) y dashboard Plotly. Lo anterior describe el código existente; la capa de vistas web está incompleta (ver Estado).
+
+## Variables de entorno (solo nombres)
+No hay `.env.example`; los nombres salen de `config/settings.py`: `DJANGO_SECRET_KEY`, `DJANGO_DEBUG`, `DJANGO_ALLOWED_HOSTS`, `CORS_ALLOWED_ORIGINS`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT`, `EMAIL_BACKEND`, `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_USE_TLS`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`, `DEFAULT_FROM_EMAIL`, `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_WHATSAPP_FROM`, `ARIMA_FORECAST_DAYS`, `ARIMA_MAX_P`, `ARIMA_MAX_D`, `ARIMA_MAX_Q`, `ARIMA_MIN_OBS`, `ARIMA_TRAIN_RATIO`.
+
+## Pruebas y CI
+`requirements.txt` fija `pytest` 8.2.0 y `pytest-django` 4.8.0, pero `tests/unit` y `tests/integration` solo contienen `__init__.py`: 0 tests. No hay workflows de CI.
+
+## Despliegue
+No hay Dockerfile ni workflow de deploy en el repo (árbol). Sin verificar (requiere observación de producción): si hay una instancia desplegada. Dev: `python manage.py runserver` en `http://localhost:8000`, MySQL 3306.
+
+## Estado y relaciones
+- **tromay:** `tromay/README.md` afirma que este repo consume su `/api/rates` y lo presenta como "Alerta de Tasas" (`alertas.kapitalya.com.bo`). Verificado en el código: ningún archivo de texto del repo (`.py`, `.html`, `.sql`, `.md`, `requirements.txt`) referencia tromay ni forex-erp; solo sirve su propio `/api/rates/`. El consumo declarado por tromay no existe en este repo.
+- **forex-erp (KapiFX):** sin dependencia de código. KapiFX tiene sus propios módulos `alerts`, `predictions` y `macro`: solape funcional con el ARIMA y las alertas de este repo.
+- `exchange_monitor/urls.py` importa `views.DashboardView`, `HistoricalView`, `ForecastView`, `AlertsView`, `AlertSettingsView` y `ModelMetricsView`; ninguna existe porque falta `exchange_monitor/views.py`.
+- `exchange_monitor/urls.py` importa `views.DashboardView`, `HistoricalView`, `ForecastView`, `AlertsView`, `AlertSettingsView` y `ModelMetricsView`; ninguna existe porque falta `exchange_monitor/views.py`.
+- Plan de construcción de referencia: `docs/BUILD_PLAN.md`.
+
+## Precios y planes
+Precios y planes: fuente única `Vault/EMPRESA/portafolio/PRECIOS-APROBADOS-20261108.md`.
+
+## Seguridad, privacidad y derechos
+- Sin secretos en el repo; credenciales solo por entorno. Las notificaciones usan Twilio y SMTP: no versionar sus claves.
+- Datos sintéticos; los datos reales de mercado de Kapitalya no están en el repo.
+- Sin LICENSE (ver sección License).
+
+## Convenciones de trabajo
+Ramas `codex/*`, PR contra `main` (no existe `develop`), CI verde antes de integrar (hoy no hay CI: pendiente).
